@@ -4,6 +4,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core import signing
+from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 
 from .models import StudentProfile
 from .serializers import (
@@ -50,11 +54,31 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+PASSWORD_RESET_SALT = 'escrs-password-reset'
+PASSWORD_RESET_MAX_AGE = 3600  # 1 hour
+
+
 class PasswordResetRequestView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        # Placeholder — sends email with reset token in production
+        email = request.data.get('email', '').strip().lower()
+        if email:
+            try:
+                user = User.objects.get(email=email, is_active=True)
+                token = signing.dumps({'uid': user.pk}, salt=PASSWORD_RESET_SALT)
+                send_mail(
+                    subject='ESCRS password reset',
+                    message=(
+                        'Use this token to reset your password (valid for 1 hour):\n\n'
+                        f'{token}'
+                    ),
+                    from_email=None,  # DEFAULT_FROM_EMAIL
+                    recipient_list=[user.email],
+                    fail_silently=True,
+                )
+            except User.DoesNotExist:
+                pass  # Always return 204 to avoid leaking which emails exist
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -62,6 +86,32 @@ class PasswordResetConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        token = request.data.get('token', '')
+        password = request.data.get('password', '')
+        if not token or not password:
+            return Response(
+                {'error': 'token and password are required', 'code': 'invalid_request'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            payload = signing.loads(token, salt=PASSWORD_RESET_SALT, max_age=PASSWORD_RESET_MAX_AGE)
+            user = User.objects.get(pk=payload['uid'], is_active=True)
+        except (signing.BadSignature, User.DoesNotExist, KeyError):
+            return Response(
+                {'error': 'Invalid or expired reset token', 'code': 'invalid_token'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            validate_password(password, user=user)
+        except ValidationError as exc:
+            return Response(
+                {'error': 'Invalid password', 'detail': exc.messages, 'code': 'invalid_password'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(password)
+        user.save(update_fields=['password'])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -82,14 +132,11 @@ class StudentMeView(generics.RetrieveUpdateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        # Mark onboarding complete if interests and program are set
+        # Mark onboarding complete if interests and program are set.
+        # The StudentProfile post_save signal queues the recommendation refresh.
         if instance.interests and instance.program:
             instance.onboarding_complete = True
             instance.save(update_fields=['onboarding_complete'])
-
-        # Trigger recommendation refresh
-        from tasks.recommendation import generate_recommendations_for_student
-        generate_recommendations_for_student.delay(request.user.id)
 
         return Response(serializer.data)
 

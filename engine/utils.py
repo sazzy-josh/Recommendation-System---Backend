@@ -11,7 +11,8 @@ def compute_implicit_score(clicks: int, time_spent_seconds: int) -> float:
     """
     Compute a normalised implicit interaction score in [0, 1].
 
-    The score is the average of two min-max normalised signals:
+    The score is a weighted blend of two min-max normalised signals
+    (weights per spec: clicks 30%, time spent 70%):
       - click signal  = min(clicks, MAX_CLICKS) / MAX_CLICKS
       - time signal   = min(time_spent_seconds, MAX_TIME_SECONDS) / MAX_TIME_SECONDS
 
@@ -19,7 +20,7 @@ def compute_implicit_score(clicks: int, time_spent_seconds: int) -> float:
     """
     click_score = min(clicks, MAX_CLICKS) / MAX_CLICKS
     time_score = min(time_spent_seconds, MAX_TIME_SECONDS) / MAX_TIME_SECONDS
-    return round((click_score + time_score) / 2, 6)
+    return round(0.3 * click_score + 0.7 * time_score, 4)
 
 
 # ── Evaluation metrics ───────────────────────────────────────────────────────

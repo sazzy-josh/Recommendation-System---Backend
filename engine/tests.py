@@ -39,3 +39,10 @@ class CBFTests(TestCase):
         self.assertAlmostEqual(score, 1.0)
         score_zero = compute_implicit_score(0, 0)
         self.assertAlmostEqual(score_zero, 0.0)
+
+    def test_implicit_score_weights_clicks_30_time_70(self):
+        # Clicks at ceiling, no time → 0.3; time at ceiling, no clicks → 0.7
+        self.assertAlmostEqual(compute_implicit_score(50, 0), 0.3)
+        self.assertAlmostEqual(compute_implicit_score(0, 1800), 0.7)
+        # Half of each signal → 0.3*0.5 + 0.7*0.5 = 0.5
+        self.assertAlmostEqual(compute_implicit_score(25, 900), 0.5)

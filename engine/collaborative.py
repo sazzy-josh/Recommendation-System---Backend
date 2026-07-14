@@ -1,8 +1,8 @@
 """
-Collaborative Filtering engine using Truncated SVD (matrix factorisation).
+Collaborative Filtering engine using SVD matrix factorisation.
 
 Builds a student-course interaction matrix from implicit signals, factorises
-it with TruncatedSVD, and returns predicted scores for a target student.
+it with scipy's sparse SVD, and returns predicted scores for a target student.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from typing import List, Dict, Any, Tuple
 import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
-from sklearn.decomposition import TruncatedSVD
+from scipy.sparse.linalg import svds
 
 from engine.utils import compute_implicit_score
 
@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 # Number of latent factors for SVD
 N_COMPONENTS = 20
-RANDOM_STATE = 42
 
 
 # ── Matrix construction ───────────────────────────────────────────────────────
@@ -79,25 +78,22 @@ def compute_svd_predictions(
     n_components: int = N_COMPONENTS,
 ) -> np.ndarray:
     """
-    Factorise the interaction matrix with TruncatedSVD and reconstruct
-    the full predicted matrix.
+    Factorise the interaction matrix with scipy's sparse SVD and reconstruct
+    the full predicted matrix (U · Σ · Vt).
 
     Returns a dense (n_students, n_courses) numpy array of predicted scores.
     """
     if matrix.shape[0] == 0 or matrix.shape[1] == 0:
         return np.zeros(matrix.shape)
 
-    n_components = min(n_components, min(matrix.shape) - 1)
-    if n_components < 1:
+    # Number of factors capped at min(rows, cols) - 1
+    k = min(n_components, min(matrix.shape) - 1)
+    if k < 1:
         return matrix.toarray()
 
-    svd = TruncatedSVD(n_components=n_components, random_state=RANDOM_STATE)
-    U = svd.fit_transform(matrix)        # (n_students, k)
-    Sigma = np.diag(svd.singular_values_)  # (k, k)
-    Vt = svd.components_                 # (k, n_courses)
+    U, sigma, Vt = svds(matrix.astype(float), k=k)
 
-    # Reconstruct: U · Σ · Vt  (note: fit_transform already incorporates Σ)
-    predicted = np.dot(U, Vt)
+    predicted = np.dot(np.dot(U, np.diag(sigma)), Vt)
     return predicted
 
 

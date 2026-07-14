@@ -1,6 +1,8 @@
 from pathlib import Path
 from datetime import timedelta
+
 import environ
+from celery.schedules import crontab
 
 env = environ.Env()
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -126,7 +128,7 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_BEAT_SCHEDULE = {
     'nightly-retrain': {
         'task': 'tasks.recommendation.retrain_all_students',
-        'schedule': 7200,  # Every 2 hours in dev; set to cron in prod
+        'schedule': crontab(hour=2, minute=0),  # 02:00 UTC daily per spec
     },
 }
 
