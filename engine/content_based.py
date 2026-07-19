@@ -45,7 +45,11 @@ def build_tfidf_matrix(courses: List[Dict[str, Any]]):
         max_features=10_000,
         sublinear_tf=True,
     )
-    tfidf_matrix = vectorizer.fit_transform(texts)
+    try:
+        tfidf_matrix = vectorizer.fit_transform(texts)
+    except ValueError:
+        # All texts are empty or contain only stop words
+        return None, None, []
     return vectorizer, tfidf_matrix, course_ids
 
 

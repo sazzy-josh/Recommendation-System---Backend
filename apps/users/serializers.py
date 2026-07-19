@@ -59,6 +59,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             'program', 'level', 'interests', 'gpa',
             'completed_course_ids', 'onboarding_complete', 'interaction_count',
         )
+        read_only_fields = ('id', 'email', 'full_name', 'role', 'onboarding_complete', 'interaction_count')
 
     def get_interaction_count(self, obj):
         return obj.user.interactions.count()

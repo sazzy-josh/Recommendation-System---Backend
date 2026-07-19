@@ -34,8 +34,14 @@ class RecommendationsView(APIView):
 class RefreshRecommendationsView(APIView):
     def post(self, request):
         from tasks.recommendation import generate_recommendations_for_student
-        task = generate_recommendations_for_student.delay(request.user.id)
-        return Response({'task_id': task.id, 'status': 'queued'}, status=status.HTTP_202_ACCEPTED)
+        try:
+            task = generate_recommendations_for_student.delay(request.user.id)
+            return Response({'task_id': task.id, 'status': 'queued'}, status=status.HTTP_202_ACCEPTED)
+        except Exception as exc:
+            return Response(
+                {'error': 'Recommendation service unavailable. Please try again later.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
 
 class FeedbackView(APIView):

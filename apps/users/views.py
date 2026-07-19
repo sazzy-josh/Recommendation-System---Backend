@@ -134,7 +134,7 @@ class StudentMeView(generics.RetrieveUpdateAPIView):
 
         # Mark onboarding complete if interests and program are set.
         # The StudentProfile post_save signal queues the recommendation refresh.
-        if instance.interests and instance.program:
+        if instance.interests and instance.program and not instance.onboarding_complete:
             instance.onboarding_complete = True
             instance.save(update_fields=['onboarding_complete'])
 
