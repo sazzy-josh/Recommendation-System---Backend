@@ -45,13 +45,27 @@ class ModuleSerializer(serializers.ModelSerializer):
         return obj.activities.count()
 
 
-class CourseDetailSerializer(CourseSerializer):
-    syllabus_text_excerpt = serializers.SerializerMethodField()
+class CourseDetailSerializer(serializers.ModelSerializer):
+    """Read-only serializer for the course detail endpoint.
+
+    Declared independently (not inheriting CourseSerializer) to avoid the
+    DRF source-binding conflict between inherited `prerequisite_ids`
+    (source='prerequisites') and the new `prerequisites` SerializerMethodField.
+    """
+
+    department = DepartmentSerializer(read_only=True)
     modules = ModuleSerializer(many=True, read_only=True)
     prerequisites = serializers.SerializerMethodField()
+    syllabus_text_excerpt = serializers.SerializerMethodField()
 
-    class Meta(CourseSerializer.Meta):
-        fields = CourseSerializer.Meta.fields + ('syllabus_text_excerpt', 'modules', 'prerequisites')
+    class Meta:
+        model = Course
+        fields = (
+            'id', 'code', 'title', 'description', 'credits', 'level',
+            'department', 'tags', 'is_active', 'created_at',
+            'syllabus_text_excerpt', 'modules', 'prerequisites',
+        )
+        read_only_fields = fields
 
     def get_syllabus_text_excerpt(self, obj):
         return obj.syllabus_text[:300] if obj.syllabus_text else ''
