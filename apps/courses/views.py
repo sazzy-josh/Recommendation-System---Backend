@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions, status
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -27,7 +28,9 @@ class CourseListCreateView(generics.ListCreateAPIView):
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Course.objects.select_related('department').prefetch_related('prerequisites')
+    queryset = Course.objects.select_related('department').prefetch_related(
+        'prerequisites', 'modules__activities'
+    )
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -37,7 +40,7 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method in ('PUT', 'PATCH', 'DELETE'):
             return [IsAdminUser()]
-        return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
 
     def perform_destroy(self, instance):
         instance.is_active = False

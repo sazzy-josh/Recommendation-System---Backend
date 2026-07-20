@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from apps.courses.models import Department, Course
+from apps.courses.models import Department, Course, CourseModule, CourseActivity
 
 
 DEPARTMENTS = [
@@ -651,6 +651,229 @@ COURSES = [
     },
 ]
 
+MODULES = {
+    "CS101": [
+        {
+            "title": "Getting Started with Python", "order": 1,
+            "description": "Set up your environment and write your first programs.",
+            "activities": [
+                {"title": "Welcome to the Course", "type": "page", "order": 1, "duration": 5,
+                 "content": "Welcome! In this course you will learn the fundamentals of programming using Python. No prior experience is required."},
+                {"title": "Installing Python & VS Code", "type": "page", "order": 2, "duration": 10,
+                 "content": "Download Python 3.11+ from python.org and install Visual Studio Code with the Python extension."},
+                {"title": "Your First Python Program", "type": "assignment", "order": 3, "duration": 20,
+                 "content": "Write a Python script that prints 'Hello, World!' and your name. Submit the .py file."},
+                {"title": "Python Basics Quiz", "type": "quiz", "order": 4, "duration": 10,
+                 "content": "Quiz covering variables, print(), and basic syntax."},
+            ],
+        },
+        {
+            "title": "Control Flow", "order": 2,
+            "description": "Conditionals, loops, and program logic.",
+            "activities": [
+                {"title": "If / Elif / Else", "type": "page", "order": 1, "duration": 15,
+                 "content": "Conditional statements let your program make decisions. Learn if, elif, and else syntax with real examples."},
+                {"title": "For and While Loops", "type": "page", "order": 2, "duration": 15,
+                 "content": "Iteration is core to programming. Master for loops over sequences and while loops with conditions."},
+                {"title": "FizzBuzz Challenge", "type": "assignment", "order": 3, "duration": 30,
+                 "content": "Print numbers 1-100. For multiples of 3 print 'Fizz', multiples of 5 print 'Buzz', both print 'FizzBuzz'."},
+                {"title": "Control Flow Quiz", "type": "quiz", "order": 4, "duration": 10,
+                 "content": "Test your understanding of conditionals and loops."},
+            ],
+        },
+        {
+            "title": "Functions and Data Structures", "order": 3,
+            "description": "Writing reusable code with functions and working with lists and dictionaries.",
+            "activities": [
+                {"title": "Defining and Calling Functions", "type": "page", "order": 1, "duration": 20,
+                 "content": "Functions are reusable blocks of code. Learn def, parameters, return values, and scope."},
+                {"title": "Lists and Tuples", "type": "page", "order": 2, "duration": 15,
+                 "content": "Lists are ordered, mutable sequences. Tuples are immutable. Learn indexing, slicing, and common methods."},
+                {"title": "Dictionaries", "type": "page", "order": 3, "duration": 15,
+                 "content": "Dictionaries store key-value pairs. Learn creation, access, iteration, and common patterns."},
+                {"title": "Python Docs - Built-in Types", "type": "url", "order": 4,
+                 "url": "https://docs.python.org/3/library/stdtypes.html", "duration": None},
+                {"title": "Shopping Cart Assignment", "type": "assignment", "order": 5, "duration": 45,
+                 "content": "Build a simple shopping cart using a list of dictionaries. Support add, remove, and total functions."},
+            ],
+        },
+    ],
+    "CS501": [
+        {
+            "title": "Foundations of Machine Learning", "order": 1,
+            "description": "Core concepts, the ML workflow, and your first models.",
+            "activities": [
+                {"title": "What is Machine Learning?", "type": "page", "order": 1, "duration": 10,
+                 "content": "Machine learning is the study of algorithms that improve through experience. Overview of supervised, unsupervised, and reinforcement learning."},
+                {"title": "The ML Workflow", "type": "page", "order": 2, "duration": 15,
+                 "content": "Data collection → preprocessing → feature engineering → model selection → training → evaluation → deployment. Each step matters."},
+                {"title": "scikit-learn Introduction", "type": "url", "order": 3,
+                 "url": "https://scikit-learn.org/stable/getting_started.html", "duration": 20},
+                {"title": "Module Quiz: ML Basics", "type": "quiz", "order": 4, "duration": 15,
+                 "content": "Test understanding of ML terminology, bias-variance tradeoff, and the train/test split."},
+            ],
+        },
+        {
+            "title": "Supervised Learning", "order": 2,
+            "description": "Linear models, decision trees, SVMs, and ensemble methods.",
+            "activities": [
+                {"title": "Linear & Logistic Regression", "type": "page", "order": 1, "duration": 30,
+                 "content": "Linear regression for continuous targets. Logistic regression for binary classification. Gradient descent optimization."},
+                {"title": "Decision Trees & Random Forests", "type": "page", "order": 2, "duration": 25,
+                 "content": "Decision trees partition data by feature thresholds. Random forests aggregate many trees to reduce variance."},
+                {"title": "Support Vector Machines", "type": "page", "order": 3, "duration": 20,
+                 "content": "SVMs find the maximum-margin hyperplane. Kernel trick enables non-linear classification."},
+                {"title": "Titanic Survival Prediction", "type": "assignment", "order": 4, "duration": 120,
+                 "content": "Use the Titanic dataset to build a classifier. Try at least 3 algorithms, compare accuracy, and submit a Jupyter notebook."},
+                {"title": "Supervised Learning Quiz", "type": "quiz", "order": 5, "duration": 20,
+                 "content": "Questions on model selection, overfitting, regularisation, and cross-validation."},
+            ],
+        },
+        {
+            "title": "Unsupervised Learning & Evaluation", "order": 3,
+            "description": "Clustering, dimensionality reduction, and model evaluation metrics.",
+            "activities": [
+                {"title": "K-Means & Hierarchical Clustering", "type": "page", "order": 1, "duration": 25,
+                 "content": "K-means assigns points to nearest centroid iteratively. Hierarchical clustering builds a dendrogram bottom-up or top-down."},
+                {"title": "PCA for Dimensionality Reduction", "type": "page", "order": 2, "duration": 20,
+                 "content": "Principal Component Analysis finds orthogonal directions of maximum variance. Use it to visualise high-dimensional data."},
+                {"title": "Evaluation Metrics Deep Dive", "type": "page", "order": 3, "duration": 20,
+                 "content": "Accuracy, precision, recall, F1, ROC-AUC for classification. MSE, RMSE, MAE for regression. When to use each."},
+                {"title": "Customer Segmentation Project", "type": "assignment", "order": 4, "duration": 90,
+                 "content": "Apply k-means and hierarchical clustering to a retail dataset. Visualise clusters with PCA and interpret the segments."},
+            ],
+        },
+    ],
+    "DS101": [
+        {
+            "title": "Python for Data Science", "order": 1,
+            "description": "NumPy, Pandas, and the data science toolkit.",
+            "activities": [
+                {"title": "NumPy Arrays", "type": "page", "order": 1, "duration": 20,
+                 "content": "NumPy provides fast multi-dimensional arrays. Learn array creation, indexing, broadcasting, and vectorised operations."},
+                {"title": "Pandas DataFrames", "type": "page", "order": 2, "duration": 25,
+                 "content": "Pandas is the backbone of data manipulation. Master Series, DataFrame, loc/iloc, groupby, and merge."},
+                {"title": "NumPy Documentation", "type": "url", "order": 3,
+                 "url": "https://numpy.org/doc/stable/user/quickstart.html", "duration": 15},
+                {"title": "Pandas Documentation", "type": "url", "order": 4,
+                 "url": "https://pandas.pydata.org/docs/getting_started/10min.html", "duration": 15},
+                {"title": "Data Wrangling Exercise", "type": "assignment", "order": 5, "duration": 60,
+                 "content": "Given a messy CSV dataset, clean it using Pandas: handle missing values, fix data types, rename columns, and export a clean version."},
+            ],
+        },
+        {
+            "title": "Exploratory Data Analysis", "order": 2,
+            "description": "Understanding data through statistics and visualisation.",
+            "activities": [
+                {"title": "Descriptive Statistics", "type": "page", "order": 1, "duration": 20,
+                 "content": "Summarise data with mean, median, mode, variance, skewness. Use .describe() and understand distributions."},
+                {"title": "Data Visualisation with Matplotlib", "type": "page", "order": 2, "duration": 25,
+                 "content": "Create histograms, scatter plots, box plots, and line charts. Customise titles, labels, colours, and figure size."},
+                {"title": "Advanced Plots with Seaborn", "type": "page", "order": 3, "duration": 20,
+                 "content": "Seaborn builds on Matplotlib. Use pairplots, heatmaps, violin plots, and categorical plots with one line of code."},
+                {"title": "EDA Quiz", "type": "quiz", "order": 4, "duration": 15,
+                 "content": "Questions on choosing the right chart type, interpreting distributions, and identifying outliers."},
+                {"title": "EDA Report Assignment", "type": "assignment", "order": 5, "duration": 90,
+                 "content": "Choose a public dataset and perform full EDA. Write a short report with 5+ visualisations and key statistical insights."},
+            ],
+        },
+    ],
+    "MATH201": [
+        {
+            "title": "Vectors and Matrices", "order": 1,
+            "description": "The building blocks of linear algebra.",
+            "activities": [
+                {"title": "Vectors in R^n", "type": "page", "order": 1, "duration": 20,
+                 "content": "A vector is an ordered list of numbers. Learn addition, scalar multiplication, dot product, and geometric interpretation."},
+                {"title": "Matrix Operations", "type": "page", "order": 2, "duration": 25,
+                 "content": "Matrices represent linear transformations. Learn addition, multiplication, transpose, and the identity matrix."},
+                {"title": "3Blue1Brown: Essence of Linear Algebra", "type": "url", "order": 3,
+                 "url": "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab", "duration": 60},
+                {"title": "Vectors & Matrices Quiz", "type": "quiz", "order": 4, "duration": 20,
+                 "content": "Test your understanding of vector operations, matrix multiplication rules, and dimensions."},
+            ],
+        },
+        {
+            "title": "Systems of Equations & Determinants", "order": 2,
+            "description": "Solving linear systems and computing determinants.",
+            "activities": [
+                {"title": "Gaussian Elimination", "type": "page", "order": 1, "duration": 30,
+                 "content": "Row reduction brings a matrix to row echelon form. Use it to solve Ax=b systematically."},
+                {"title": "Determinants", "type": "page", "order": 2, "duration": 20,
+                 "content": "The determinant of a square matrix encodes geometric scaling. Learn cofactor expansion and properties."},
+                {"title": "System Solving Assignment", "type": "assignment", "order": 3, "duration": 60,
+                 "content": "Solve 5 systems of linear equations using Gaussian elimination by hand, then verify with NumPy."},
+                {"title": "Linear Systems Quiz", "type": "quiz", "order": 4, "duration": 15,
+                 "content": "Questions on row reduction, rank, null space, and solution existence."},
+            ],
+        },
+        {
+            "title": "Eigenvalues and Applications", "order": 3,
+            "description": "Eigendecomposition, PCA, and PageRank.",
+            "activities": [
+                {"title": "Eigenvalues and Eigenvectors", "type": "page", "order": 1, "duration": 25,
+                 "content": "Av = λv defines eigenvectors. Learn the characteristic polynomial, how to compute eigenvalues, and geometric meaning."},
+                {"title": "Diagonalisation", "type": "page", "order": 2, "duration": 20,
+                 "content": "A diagonalisable matrix A = PDP^{-1} where D is diagonal. This simplifies matrix powers and exponentials."},
+                {"title": "Application: PCA", "type": "page", "order": 3, "duration": 20,
+                 "content": "PCA uses the eigenvectors of the covariance matrix to find principal components. Implement it with NumPy."},
+                {"title": "Eigenvalues Quiz", "type": "quiz", "order": 4, "duration": 20,
+                 "content": "Compute eigenvalues, verify eigenvectors, and determine diagonalisability."},
+                {"title": "Spectral Analysis Project", "type": "assignment", "order": 5, "duration": 90,
+                 "content": "Apply eigendecomposition to a real-world network (e.g. social graph). Compute the PageRank vector and interpret results."},
+            ],
+        },
+    ],
+    "STAT101": [
+        {
+            "title": "Descriptive Statistics", "order": 1,
+            "description": "Summarising and visualising data.",
+            "activities": [
+                {"title": "Types of Data", "type": "page", "order": 1, "duration": 10,
+                 "content": "Categorical vs numerical. Nominal, ordinal, interval, ratio scales. Choosing the right analysis depends on data type."},
+                {"title": "Measures of Centre and Spread", "type": "page", "order": 2, "duration": 20,
+                 "content": "Mean, median, mode. Variance, standard deviation, IQR, range. When to use each and how outliers affect them."},
+                {"title": "Charts and Graphs", "type": "page", "order": 3, "duration": 15,
+                 "content": "Histograms, box plots, bar charts, and scatter plots. Match the chart to the data type and the question."},
+                {"title": "Descriptive Stats Quiz", "type": "quiz", "order": 4, "duration": 15,
+                 "content": "Calculate mean, median, variance, and choose appropriate visualisations for given datasets."},
+            ],
+        },
+        {
+            "title": "Probability and Distributions", "order": 2,
+            "description": "The language of uncertainty.",
+            "activities": [
+                {"title": "Probability Rules", "type": "page", "order": 1, "duration": 20,
+                 "content": "Sample spaces, events, union, intersection, complement. Addition and multiplication rules. Conditional probability."},
+                {"title": "Discrete Distributions", "type": "page", "order": 2, "duration": 20,
+                 "content": "Bernoulli, Binomial, Poisson distributions. PMF, CDF, expected value, variance. Real-world examples."},
+                {"title": "The Normal Distribution", "type": "page", "order": 3, "duration": 20,
+                 "content": "Bell curve, 68-95-99.7 rule, Z-scores, standardisation. Central limit theorem and why it matters."},
+                {"title": "Probability Quiz", "type": "quiz", "order": 4, "duration": 20,
+                 "content": "Calculate probabilities, identify distributions, apply the CLT."},
+                {"title": "Simulation Assignment", "type": "assignment", "order": 5, "duration": 60,
+                 "content": "Use Python to simulate 10,000 coin flips and dice rolls. Plot the distributions and compare to theoretical values."},
+            ],
+        },
+        {
+            "title": "Hypothesis Testing", "order": 3,
+            "description": "Making decisions from data.",
+            "activities": [
+                {"title": "Hypothesis Testing Framework", "type": "page", "order": 1, "duration": 20,
+                 "content": "Null and alternative hypotheses. Type I and Type II errors. p-values and significance levels. Power of a test."},
+                {"title": "Z-test and T-test", "type": "page", "order": 2, "duration": 25,
+                 "content": "One-sample and two-sample tests. When to use z vs t. Assumptions, test statistic, and interpretation."},
+                {"title": "Khan Academy: Significance Tests", "type": "url", "order": 3,
+                 "url": "https://www.khanacademy.org/math/statistics-probability/significance-tests-one-sample", "duration": 30},
+                {"title": "Hypothesis Testing Quiz", "type": "quiz", "order": 4, "duration": 20,
+                 "content": "Formulate hypotheses, choose the right test, interpret p-values, and state conclusions."},
+                {"title": "A/B Test Analysis", "type": "assignment", "order": 5, "duration": 75,
+                 "content": "Given results from an A/B test on two website designs, perform a two-sample t-test. State your conclusions with confidence intervals."},
+            ],
+        },
+    ],
+}
+
 
 class Command(BaseCommand):
     help = "Seed the database with departments and courses"
@@ -705,7 +928,51 @@ class Command(BaseCommand):
                 prereqs = [course_map[p] for p in prereq_codes if p in course_map]
                 course_obj.prerequisites.set(prereqs)
 
+        # Seed modules and activities for representative courses
+        module_count = 0
+        activity_count = 0
+        for course_code, module_list in MODULES.items():
+            course_obj = course_map.get(course_code)
+            if not course_obj:
+                self.stdout.write(self.style.WARNING(f"  Course {course_code} not found, skipping modules."))
+                continue
+
+            for module_data in module_list:
+                module_obj, module_created = CourseModule.objects.get_or_create(
+                    course=course_obj,
+                    title=module_data["title"],
+                    defaults={
+                        "description": module_data.get("description", ""),
+                        "order": module_data["order"],
+                    },
+                )
+                if module_created:
+                    module_count += 1
+                    self.stdout.write(f"    Created module: {module_obj}")
+
+                # Clear existing activities for this module and recreate
+                module_obj.activities.all().delete()
+
+                activities_to_create = []
+                for act in module_data.get("activities", []):
+                    activities_to_create.append(
+                        CourseActivity(
+                            module=module_obj,
+                            title=act["title"],
+                            activity_type=act["type"],
+                            content=act.get("content", ""),
+                            url=act.get("url", ""),
+                            order=act["order"],
+                            duration_minutes=act.get("duration"),
+                        )
+                    )
+                created_activities = CourseActivity.objects.bulk_create(activities_to_create)
+                activity_count += len(created_activities)
+
         total = Course.objects.count()
         self.stdout.write(self.style.SUCCESS(
             f"\nDone. {total} courses and {Department.objects.count()} departments in the database."
+        ))
+        self.stdout.write(self.style.SUCCESS(
+            f"Modules seeded: {module_count}. Activities seeded: {activity_count}."
         ))

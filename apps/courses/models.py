@@ -37,3 +37,40 @@ class Course(models.Model):
 
     def get_vector(self):
         return np.array(self.syllabus_vector) if self.syllabus_vector else np.array([])
+
+
+class CourseModule(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='modules')
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'course_modules'
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.course.code} › {self.title}"
+
+
+class CourseActivity(models.Model):
+    class ActivityType(models.TextChoices):
+        QUIZ = 'quiz', 'Quiz'
+        PAGE = 'page', 'Page'
+        ASSIGNMENT = 'assignment', 'Assignment'
+        URL = 'url', 'URL'
+
+    module = models.ForeignKey(CourseModule, on_delete=models.CASCADE, related_name='activities')
+    title = models.CharField(max_length=255)
+    activity_type = models.CharField(max_length=20, choices=ActivityType.choices)
+    content = models.TextField(blank=True)
+    url = models.URLField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+    duration_minutes = models.PositiveIntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'course_activities'
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.module.title} › {self.title}"
