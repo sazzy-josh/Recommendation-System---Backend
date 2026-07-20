@@ -1,7 +1,10 @@
+import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 from .models import RecommendationResult, Feedback, EngineSettings
 from .serializers import RecommendationResultSerializer, FeedbackSerializer, EngineSettingsSerializer
@@ -13,6 +16,17 @@ class RecommendationsView(APIView):
         results = RecommendationResult.objects.filter(
             student=request.user
         ).select_related('course', 'course__department').prefetch_related('feedbacks')
+
+        # Generate synchronously on first request if Celery hasn't run yet
+        if not results.exists():
+            try:
+                from tasks.recommendation import run_recommendations_sync
+                run_recommendations_sync(request.user.id)
+                results = RecommendationResult.objects.filter(
+                    student=request.user
+                ).select_related('course', 'course__department').prefetch_related('feedbacks')
+            except Exception as exc:
+                logger.warning(f"Sync recommendation generation failed for user {request.user.id}: {exc}")
 
         settings = EngineSettings.get_settings()
         interaction_count = Interaction.objects.filter(student=request.user).count()
