@@ -21,15 +21,11 @@ def trigger_recommendations_on_profile_save(sender, instance, **kwargs):
     if not instance.onboarding_complete:
         return
 
-    from tasks.recommendation import generate_recommendations_for_student, run_recommendations_sync
+    from tasks.recommendation import generate_recommendations_for_student
 
     try:
         generate_recommendations_for_student.delay(instance.user_id)
-    except Exception:
-        # Broker unavailable — run synchronously so the user gets results immediately
-        try:
-            run_recommendations_sync(instance.user_id)
-        except Exception as exc:
-            logger.warning(
-                f"Could not generate recommendations for user {instance.user_id}: {exc}"
-            )
+    except Exception as exc:  # broker unavailable — don't block the request
+        logger.warning(
+            f"Could not queue recommendation refresh for user {instance.user_id}: {exc}"
+        )
