@@ -49,12 +49,16 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     """Read-only serializer for the course detail endpoint.
 
     Declared independently (not inheriting CourseSerializer) to avoid the
-    DRF source-binding conflict between inherited `prerequisite_ids`
+    DRF source-binding conflict between the parent's `prerequisite_ids`
     (source='prerequisites') and the new `prerequisites` SerializerMethodField.
+
+    `modules` is a SerializerMethodField rather than a nested serializer so
+    that a missing course_modules table (migration not yet applied) returns []
+    instead of a 500.
     """
 
     department = DepartmentSerializer(read_only=True)
-    modules = ModuleSerializer(many=True, read_only=True)
+    modules = serializers.SerializerMethodField()
     prerequisites = serializers.SerializerMethodField()
     syllabus_text_excerpt = serializers.SerializerMethodField()
 
@@ -65,13 +69,22 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             'department', 'tags', 'is_active', 'created_at',
             'syllabus_text_excerpt', 'modules', 'prerequisites',
         )
-        read_only_fields = fields
 
     def get_syllabus_text_excerpt(self, obj):
         return obj.syllabus_text[:300] if obj.syllabus_text else ''
 
+    def get_modules(self, obj):
+        try:
+            modules = obj.modules.prefetch_related('activities').all()
+            return ModuleSerializer(modules, many=True).data
+        except Exception:
+            return []
+
     def get_prerequisites(self, obj):
-        return [{'id': p.id, 'code': p.code, 'title': p.title} for p in obj.prerequisites.all()]
+        try:
+            return [{'id': p.id, 'code': p.code, 'title': p.title} for p in obj.prerequisites.all()]
+        except Exception:
+            return []
 
 
 class CourseStatsSerializer(serializers.Serializer):

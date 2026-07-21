@@ -28,9 +28,9 @@ class CourseListCreateView(generics.ListCreateAPIView):
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Course.objects.select_related('department').prefetch_related(
-        'prerequisites', 'modules__activities'
-    )
+    # prerequisites is prefetched here; modules are fetched inside get_modules()
+    # on the serializer so a missing course_modules table doesn't 500 the view.
+    queryset = Course.objects.select_related('department').prefetch_related('prerequisites')
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
