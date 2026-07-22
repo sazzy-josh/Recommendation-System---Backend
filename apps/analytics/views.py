@@ -115,3 +115,35 @@ class AdminRecommendationAuditView(APIView):
             'student', 'course'
         ).order_by('-created_at')[:100]
         return Response(RecommendationResultSerializer(results, many=True).data)
+
+
+class AdminStudentInteractionsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, student_id):
+        from apps.interactions.models import Interaction
+        from django.shortcuts import get_object_or_404
+
+        get_object_or_404(User, id=student_id, role='student', is_active=True)
+
+        interactions = (
+            Interaction.objects
+            .filter(student_id=student_id)
+            .select_related('course')
+            .order_by('-updated_at')
+        )
+
+        data = [
+            {
+                'id': i.id,
+                'course_id': i.course.id,
+                'course_code': i.course.code,
+                'course_title': i.course.title,
+                'clicks': i.clicks,
+                'time_spent_seconds': i.time_spent_seconds,
+                'last_accessed': i.last_accessed,
+                'updated_at': i.updated_at,
+            }
+            for i in interactions
+        ]
+        return Response(data)

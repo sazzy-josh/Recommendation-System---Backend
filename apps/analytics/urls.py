@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     AnalyticsView, AdminSettingsView, RetrainView,
     AdminStudentsView, AdminRecommendationAuditView,
+    AdminStudentInteractionsView,
 )
 
 urlpatterns = [
@@ -10,4 +11,5 @@ urlpatterns = [
     path('settings/', AdminSettingsView.as_view(), name='admin-settings'),
     path('engine/retrain/', RetrainView.as_view(), name='admin-retrain'),
     path('students/', AdminStudentsView.as_view(), name='admin-students'),
+    path('students/<int:student_id>/interactions/', AdminStudentInteractionsView.as_view(), name='admin-student-interactions'),
 ]
