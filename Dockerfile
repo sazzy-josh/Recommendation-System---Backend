@@ -13,6 +13,8 @@ RUN pip install --no-cache-dir --default-timeout=1000 --retries=10 -r requiremen
 
 COPY . .
 
+RUN chmod +x entrypoint.sh
+
 EXPOSE 8000
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2"]
+CMD ["./entrypoint.sh"]
