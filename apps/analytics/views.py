@@ -147,3 +147,60 @@ class AdminStudentInteractionsView(APIView):
             for i in interactions
         ]
         return Response(data)
+
+
+class AdminStudentDetailView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, student_id):
+        from django.shortcuts import get_object_or_404
+
+        student = get_object_or_404(User, id=student_id, role='student', is_active=True)
+        profile = getattr(student, 'student_profile', None)
+
+        return Response({
+            'id': student.id,
+            'email': student.email,
+            'full_name': student.full_name,
+            'program': profile.program if profile else '',
+            'level': profile.level if profile else '',
+            'gpa': str(profile.gpa) if profile and profile.gpa else None,
+            'interests': profile.interests if profile else [],
+            'completed_course_ids': profile.completed_course_ids if profile else [],
+            'onboarding_complete': profile.onboarding_complete if profile else False,
+            'interaction_count': student.interactions.count(),
+            'enrollment_count': student.enrollments.count(),
+            'recommendation_count': student.recommendations.count(),
+            'joined_at': student.created_at,
+        })
+
+
+class AdminStudentEnrollmentsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, student_id):
+        from django.shortcuts import get_object_or_404
+        from apps.interactions.models import Enrollment
+
+        get_object_or_404(User, id=student_id, role='student', is_active=True)
+
+        enrollments = (
+            Enrollment.objects
+            .filter(student_id=student_id)
+            .select_related('course')
+            .order_by('-id')
+        )
+
+        data = [
+            {
+                'id': e.id,
+                'course_id': e.course.id,
+                'course_code': e.course.code,
+                'course_title': e.course.title,
+                'grade': str(e.grade) if e.grade is not None else None,
+                'completed_at': e.completed_at,
+                'semester': e.semester,
+            }
+            for e in enrollments
+        ]
+        return Response(data)
